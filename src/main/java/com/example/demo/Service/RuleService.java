@@ -15,4 +15,6 @@ public interface RuleService {
     Node createRuleFromString(String ruleString); // For creating AST from rule string
     Node combineRules(List<String> rules); // For combining multiple rules into a single AST
     boolean evaluateRule(Node ast, Map<String, Object> data); // For evaluating the AST against user data
+   
+    
 }

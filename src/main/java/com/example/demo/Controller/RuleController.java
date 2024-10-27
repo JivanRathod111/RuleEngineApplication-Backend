@@ -5,7 +5,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+//import org.hibernate.validator.internal.util.logging.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +32,8 @@ import com.example.demo.Repository.RuleRepository;
 import com.example.demo.Service.RuleService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+//import ch.qos.logback.classic.Logger;
+
 @RestController
 @RequestMapping("/api/rules")
 public class RuleController {
@@ -43,14 +50,14 @@ public class RuleController {
         return new ResponseEntity<>(createdRule, HttpStatus.CREATED);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Rule> getRuleById(@PathVariable Long id) {
-        Rule rule = ruleService.getRuleById(id);
-        if (rule == null) {
-            throw new RuleNotFoundException("Rule not found with id: " + id);
-        }
-        return new ResponseEntity<>(rule, HttpStatus.OK);
-    }
+//    @GetMapping("/{id}")
+//    public ResponseEntity<Rule> getRuleById(@PathVariable Long id) {
+//        Rule rule = ruleService.getRuleById(id);
+//        if (rule == null) {
+//            throw new RuleNotFoundException("Rule not found with id: " + id);
+//        }
+//        return new ResponseEntity<>(rule, HttpStatus.OK);
+//    }
 
     @GetMapping
     public ResponseEntity<List<Rule>> getAllRules() {
@@ -71,12 +78,12 @@ public class RuleController {
     }
 
 //    @PostMapping("/create")
-//    public ResponseEntity<Node> createRuleFromString(@RequestBody Map<String, String> requestBody) {
-//        String ruleString = requestBody.get("ruleString");
-//        Node ast = ruleService.createRuleFromString(ruleString);
-//        return ResponseEntity.ok(ast);
-//    }
-    
+//   public ResponseEntity<Node> createRuleFromString(@RequestBody Map<String, String> requestBody) {
+////        String ruleString = requestBody.get("ruleString");
+////        Node ast = ruleService.createRuleFromString(ruleString);
+////        return ResponseEntity.ok(ast);
+////    }
+//    
     @PostMapping("/create")
     public ResponseEntity<RuleResponse> createRuleFromString(@RequestBody Map<String, String> requestBody) {
         String ruleString = requestBody.get("ruleString");
@@ -93,6 +100,28 @@ public class RuleController {
 
         return ResponseEntity.ok(response);
     }
+    
+    @GetMapping("/{id}")
+    public ResponseEntity<RuleResponse> getRuleById(@PathVariable Long id) {
+        // Find the rule by ID in the database
+        Optional<Rule> ruleOptional = ruleRepository.findById(id);
+        
+        // If the rule is not found, return a 404 response
+        if (ruleOptional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Rule rule = ruleOptional.get();
+
+        // Generate the AST based on ruleString
+        Node ast = ruleService.createRuleFromString(rule.getRuleString());
+
+        // Create RuleResponse with id, ruleString, and ast
+        RuleResponse response = new RuleResponse(rule.getId(), rule.getRuleString(), ast);
+
+        return ResponseEntity.ok(response);
+    }
+
 
 
     @PostMapping("/combine")
@@ -108,6 +137,12 @@ public class RuleController {
         // Return the response with the combined AST
         return ResponseEntity.ok(combinedAST); // Return the AST directly
     }
+
+    
+    
+    
+    
+    
 
     @PostMapping("/evaluate")
     public ResponseEntity<Map<String, Object>> evaluateRule(@RequestBody EvaluationRequest request) {
@@ -134,4 +169,9 @@ public class RuleController {
 
         return ResponseEntity.ok(Collections.singletonMap("results", results));
     }
-}
+    
+   
+}   
+
+
+   

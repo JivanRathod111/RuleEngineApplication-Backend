@@ -1,6 +1,7 @@
 package com.example.demo.Service.Impl;
 
 
+//import org.hibernate.validator.internal.util.logging.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -9,6 +10,11 @@ import com.example.demo.Model.Node;
 import com.example.demo.Model.Rule;
 import com.example.demo.Repository.RuleRepository;
 import com.example.demo.Service.RuleService;
+
+//import ch.qos.logback.classic.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -184,12 +190,52 @@ public class RuleServiceImpl implements RuleService {
         return new Node("OR", existingAst, newAst); // Combine using OR, you can change this based on your logic
     }
     
-    
-
+   
     @Override
     public boolean evaluateRule(Node ast, Map<String, Object> data) {
         return evaluateAST(ast, data);
     }
+   
+    private boolean evaluateNumericComparison(String operator, double attributeValue, double comparisonValue) {
+        switch (operator) {
+            case ">":
+                return attributeValue > comparisonValue;
+            case "<":
+                return attributeValue < comparisonValue;
+            case "=":
+                return attributeValue == comparisonValue;
+            case ">=":
+                return attributeValue >= comparisonValue;
+            case "<=":
+                return attributeValue <= comparisonValue;
+            default:
+                throw new IllegalArgumentException("Invalid operator for numeric comparison: " + operator);
+        }
+    }
+
+    private boolean evaluateStringComparison(String operator, String attributeValue, String comparisonValue) {
+        switch (operator) {
+            case "=":
+                return attributeValue.equalsIgnoreCase(comparisonValue); // Case insensitive
+            case "!=":
+                return !attributeValue.equalsIgnoreCase(comparisonValue);
+            default:
+                throw new IllegalArgumentException("Invalid operator for string comparison: " + operator);
+        }
+    }
+
+    private boolean evaluateLogicalOperator(String operator, boolean leftResult, boolean rightResult) {
+        switch (operator) {
+            case "AND":
+                return leftResult && rightResult;
+            case "OR":
+                return leftResult || rightResult;
+            default:
+                throw new IllegalArgumentException("Invalid logical operator: " + operator);
+        }
+    }
+
+   
 
     private boolean evaluateAST(Node ast, Map<String, Object> data) {
         if (ast.getType().equals("operand")) {
@@ -256,8 +302,8 @@ public class RuleServiceImpl implements RuleService {
         }
         throw new IllegalArgumentException("Invalid AST node type: " + ast.getType());
     }
-
+    
+    }
 
     
     
-}
